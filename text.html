@@ -14,17 +14,15 @@
     </script>
 
     <script>
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
+      console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-02-24 17:48:12] navigator.mediaDevices-->`, navigator.mediaDevices, navigator.mediaDevices.getUserMedia);
       document.getElementById('requestMicButton').addEventListener('click', async () => {
-        console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-02-24 17:48:12] navigator.mediaDevices-->`, navigator.mediaDevices, navigator.mediaDevices.getUserMedia);
         navigator.mediaDevices
           .getUserMedia({ audio: true })
           .then((stream) => {
             alert('麦克风权限已申请成功');
           })
           .catch((error) => {
-            console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-02-24 18:41:38] error-->`, error);
+            console.error(`error-->`, error);
             alert(`麦克风权限申请失败${JSON.stringify(error)}`);
           });
       });
