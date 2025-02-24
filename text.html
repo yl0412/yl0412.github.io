@@ -14,27 +14,7 @@
     </script>
 
     <script>
-      // @ts-ignore
       navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-      // const isSupportMediaDevicesMedia = () => {
-      //   // @ts-ignore
-      //   return !!(navigator.getUserMedia || (navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
-      // };
-      // const isSupportUserMediaMedia = () => {
-      //   // @ts-ignore
-      //   return !!navigator.getUserMedia;
-      // };
-
-      // export const getUserMedia = (config, getStreamSuccess: (stream: MediaStream) => void, getStreamFail: (err: any) => void) => {
-      //   if (isSupportMediaDevicesMedia()) {
-      //     navigator.mediaDevices.getUserMedia(config).then(getStreamSuccess).catch(getStreamFail);
-      //   } else if (isSupportUserMediaMedia()) {
-      //     // @ts-ignore
-      //     navigator.getUserMedia(config, getStreamSuccess, getStreamFail);
-      //   } else {
-      //     console.error(`[Log] 无法获取浏览器录音功能，请升级浏览器或使用chrome`);
-      //   }
-      // };
 
       document.getElementById('requestMicButton').addEventListener('click', async () => {
         console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-02-24 17:48:12] navigator.mediaDevices-->`, navigator.mediaDevices, navigator.mediaDevices.getUserMedia);
@@ -44,6 +24,7 @@
             alert('麦克风权限已申请成功');
           })
           .catch((error) => {
+            console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-02-24 18:41:38] error-->`, error);
             alert(`麦克风权限申请失败${JSON.stringify(error)}`);
           });
       });
