@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>麦克风权限申请</title>
+    <!-- <script src="./vconsole.min.js"></script> -->
+    <!-- <script>
+      var vConsole = new window.VConsole();
+    </script> -->
+    <script src="./eruda.min.js"></script>
+    <script>
+      eruda.init();
+    </script>
+  </head>
+  <body>
+    <h1>2025-06-03 19:00:26</h1>
+    <button id="micButton">获取麦克风权限</button>
+    <div id="status"></div>
+
+    <script>
+      const micButton = document.getElementById('micButton');
+      const statusDiv = document.getElementById('status');
+
+      micButton.addEventListener('click', async () => {
+        try {
+          // 请求麦克风权限
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-06-03 18:52:55] stream-->`, stream, stream.getTracks());
+          // 关闭媒体流（我们只需要权限验证）
+          // stream.getTracks().forEach((track) => track.stop());
+
+          statusDiv.textContent = '麦克风权限已授予 ✅';
+          statusDiv.style.color = 'green';
+        } catch (error) {
+          statusDiv.textContent = `权限被拒绝：${error.message}`;
+          statusDiv.style.color = 'red';
+        }
+      });
+    </script>
+  </body>
+</html>
