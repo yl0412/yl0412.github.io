@@ -14,23 +14,49 @@
     </script>
   </head>
   <body>
-    <h1>2025-06-03 19:00:26</h1>
-    <button id="micButton">获取麦克风权限</button>
+    <h1>2025-10-10 20:34:44</h1>
+    <div>
+      <label>
+        <input type="checkbox" id="audioCheckbox" checked />
+        麦克风权限
+      </label>
+    </div>
+    <div>
+      <label>
+        <input type="checkbox" id="videoCheckbox" />
+        摄像头权限
+      </label>
+    </div>
+    <button id="mediaButton">获取媒体权限</button>
     <div id="status"></div>
 
     <script>
-      const micButton = document.getElementById('micButton');
+      const audioCheckbox = document.getElementById('audioCheckbox');
+      const videoCheckbox = document.getElementById('videoCheckbox');
+      const mediaButton = document.getElementById('mediaButton');
       const statusDiv = document.getElementById('status');
 
-      micButton.addEventListener('click', async () => {
-        try {
-          // 请求麦克风权限
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-06-03 18:52:55] stream-->`, stream, stream.getTracks());
-          // 关闭媒体流（我们只需要权限验证）
-          // stream.getTracks().forEach((track) => track.stop());
+      mediaButton.addEventListener('click', async () => {
+        const audioEnabled = audioCheckbox.checked;
+        const videoEnabled = videoCheckbox.checked;
 
-          statusDiv.textContent = '麦克风权限已授予 ✅';
+        if (!audioEnabled && !videoEnabled) {
+          statusDiv.textContent = '请至少选择一个权限';
+          statusDiv.style.color = 'orange';
+          return;
+        }
+
+        try {
+          // 根据选择的权限请求媒体设备
+          const constraints = {
+            audio: audioEnabled,
+            video: videoEnabled,
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-06-03 18:52:55] stream-->`, stream, stream.getTracks());
+
+          statusDiv.textContent = `权限已授予 ✅ 音频: ${audioEnabled ? '是' : '否'}, 视频: ${videoEnabled ? '是' : '否'}`;
           statusDiv.style.color = 'green';
         } catch (error) {
           statusDiv.textContent = `权限被拒绝：${error.message}`;
