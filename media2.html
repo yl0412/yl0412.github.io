@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>麦克风权限申请</title>
+    <!-- <script src="./vconsole.min.js"></script> -->
+    <!-- <script>
+      var vConsole = new window.VConsole();
+    </script> -->
+    <script src="./eruda.min.js"></script>
+    <script>
+      eruda.init();
+    </script>
+  </head>
+  <body>
+    <h1>2025-10-10 20:34:44</h1>
+    <div>
+      <label>
+        <input type="checkbox" id="audioCheckbox" checked />
+        麦克风权限
+      </label>
+    </div>
+    <div>
+      <label>
+        <input type="checkbox" id="videoCheckbox" />
+        摄像头权限
+      </label>
+    </div>
+    <button id="mediaButton">获取媒体权限</button>
+    <div id="status"></div>
+
+    <script>
+      function loadScript(config) {
+        console.log(`\x1B[1m\x1B[32m[🐑🐑🐑] config-->`, config);
+        let { url, id, version = 1 } = config;
+        if (!id) id = url;
+        return new Promise((resolve, reject) => {
+          const existedEl = document.getElementById(id);
+          if (existedEl) {
+            // 节点存在在做一个版本管理，有新版本就替换老版本，没有就继续用老版本
+            const existedVersion = parseInt(existedEl.dataset.version || '0');
+            if (existedVersion >= version) {
+              // 使用老版本
+              return resolve(true);
+            }
+            // 移除老版本
+            existedEl.parentElement?.removeChild(existedEl);
+          }
+          const script = document.createElement('script');
+          script.setAttribute('id', id);
+          script.dataset.version = String(version);
+          script.type = 'text/javascript';
+          script.async = true;
+          script.src = url;
+          script.onerror = reject;
+          script.onload = function () {
+            resolve(true);
+          };
+          document.head.appendChild(script);
+          return;
+        });
+      }
+      const getWeiXinSDK = async () => {
+        await loadScript({ url: `${window.location.protocol}//res.wx.qq.com/open/js/jweixin-1.4.0.js`, id: 'test_sdk_id_weixin' });
+      };
+
+      const checkVideoPermission = async () => {
+        await getWeiXinSDK();
+        const isHavePromission = await new Promise((resolve, reject) => {
+          // 检查用户是否已经授权麦克风权限
+          const wx = window.wx;
+
+          wx.invoke('startRecord', {}, function (res) {
+            if (res.err_msg === 'startRecord:ok') {
+              // 成功，说明有权限
+              resolve(true);
+              // 立即停止
+              wx.invoke('stopRecord', {}, function () {});
+            } else {
+              // 失败，可能是权限问题
+              resolve(false);
+            }
+          });
+        });
+        console.log(`\x1B[1m\x1B[32m[🐑🐑🐑] isHavePromission-->`, isHavePromission);
+      };
+      checkVideoPermission();
+    </script>
+
+    <script>
+      const audioCheckbox = document.getElementById('audioCheckbox');
+      const videoCheckbox = document.getElementById('videoCheckbox');
+      const mediaButton = document.getElementById('mediaButton');
+      const statusDiv = document.getElementById('status');
+
+      mediaButton.addEventListener('click', async () => {
+        const audioEnabled = audioCheckbox.checked;
+        const videoEnabled = videoCheckbox.checked;
+
+        if (!audioEnabled && !videoEnabled) {
+          statusDiv.textContent = '请至少选择一个权限';
+          statusDiv.style.color = 'orange';
+          return;
+        }
+
+        try {
+          // 根据选择的权限请求媒体设备
+          const constraints = {
+            audio: audioEnabled,
+            video: videoEnabled,
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          console.log(`\x1B[1m\x1B[32m[🐑🐑🐑][2025-06-03 18:52:55] stream-->`, stream, stream.getTracks());
+
+          statusDiv.textContent = `权限已授予 ✅ 音频: ${audioEnabled ? '是' : '否'}, 视频: ${videoEnabled ? '是' : '否'}`;
+          statusDiv.style.color = 'green';
+        } catch (error) {
+          statusDiv.textContent = `权限被拒绝：${error.message}`;
+          statusDiv.style.color = 'red';
+        }
+      });
+    </script>
+  </body>
+</html>
