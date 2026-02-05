@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>设备信息检测 - 含麦克风/扬声器</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Microsoft YaHei', Arial, sans-serif;
+      }
+
+      body {
+        background-color: #f5f7fa;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 24px;
+      }
+
+      .info-group {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .info-group:last-child {
+        border-bottom: none;
+      }
+
+      .info-group h2 {
+        color: #409eff;
+        font-size: 18px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .info-item {
+        display: flex;
+        margin-bottom: 10px;
+        padding: 8px 0;
+      }
+
+      .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: #666;
+        flex-shrink: 0;
+      }
+
+      .info-value {
+        color: #333;
+        flex: 1;
+        word-break: break-all;
+      }
+
+      .device-list {
+        list-style: none;
+        margin-top: 8px;
+        padding-left: 140px;
+      }
+
+      .device-list li {
+        margin-bottom: 6px;
+        padding: 4px 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+
+      .status-success {
+        color: #67c23a;
+      }
+
+      .status-warning {
+        color: #e6a23c;
+      }
+
+      .status-error {
+        color: #f56c6c;
+      }
+
+      .tip {
+        font-size: 14px;
+        color: #999;
+        margin-top: 5px;
+        padding-left: 140px;
+      }
+
+      /* 移动端适配 */
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px 15px;
+        }
+
+        .info-item {
+          flex-direction: column;
+        }
+
+        .info-label {
+          width: 100%;
+          margin-bottom: 5px;
+        }
+
+        .device-list,
+        .tip {
+          padding-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>设备信息检测测试页面</h1>
+
+      <!-- 基础设备信息 -->
+      <div class="info-group">
+        <h2>📱 基础设备信息</h2>
+        <div class="info-item">
+          <span class="info-label">设备类型：</span>
+          <span class="info-value" id="deviceType">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">操作系统：</span>
+          <span class="info-value" id="os">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">浏览器：</span>
+          <span class="info-value" id="browser">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">浏览器版本：</span>
+          <span class="info-value" id="browserVersion">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">用户代理（UA）：</span>
+          <span class="info-value" id="userAgent">检测中...</span>
+        </div>
+      </div>
+
+      <!-- 屏幕与显示信息 -->
+      <div class="info-group">
+        <h2>🖥️ 屏幕与显示信息</h2>
+        <div class="info-item">
+          <span class="info-label">屏幕分辨率：</span>
+          <span class="info-value" id="screenResolution">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">窗口分辨率：</span>
+          <span class="info-value" id="windowResolution">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">像素密度（DPR）：</span>
+          <span class="info-value" id="pixelRatio">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">颜色深度：</span>
+          <span class="info-value" id="colorDepth">检测中...</span>
+        </div>
+      </div>
+
+      <!-- 新增：麦克风/扬声器设备 -->
+      <div class="info-group">
+        <h2>🎤 音频设备（麦克风/扬声器）</h2>
+        <div class="info-item">
+          <span class="info-label">麦克风（输入）：</span>
+          <span class="info-value" id="audioInput">检测中...（需授权）</span>
+        </div>
+        <ul class="device-list" id="audioInputList"></ul>
+        <div class="info-item" style="margin-top: 10px">
+          <span class="info-label">扬声器（输出）：</span>
+          <span class="info-value" id="audioOutput">检测中...（需授权）</span>
+        </div>
+        <ul class="device-list" id="audioOutputList"></ul>
+        <p class="tip">提示：需允许浏览器「媒体设备」权限，才能显示设备详细信息；部分浏览器需HTTPS环境（本地file://除外）。</p>
+      </div>
+
+      <!-- 网络与连接信息 -->
+      <div class="info-group">
+        <h2>🌐 网络与连接信息</h2>
+        <div class="info-item">
+          <span class="info-label">网络类型：</span>
+          <span class="info-value" id="networkType">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">网络有效带宽：</span>
+          <span class="info-value" id="downlink">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">网络延迟：</span>
+          <span class="info-value" id="rtt">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">是否在线：</span>
+          <span class="info-value" id="isOnline">检测中...</span>
+        </div>
+      </div>
+
+      <!-- 电池与硬件信息 -->
+      <div class="info-group">
+        <h2>🔋 电池与硬件信息</h2>
+        <div class="info-item">
+          <span class="info-label">电池电量：</span>
+          <span class="info-value" id="batteryLevel">不支持/检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">是否充电：</span>
+          <span class="info-value" id="batteryCharging">不支持/检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">硬件核心数：</span>
+          <span class="info-value" id="hardwareConcurrency">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">设备内存：</span>
+          <span class="info-value" id="deviceMemory">不支持/检测中...</span>
+        </div>
+      </div>
+
+      <!-- 其他信息 -->
+      <div class="info-group">
+        <h2>ℹ️ 其他信息</h2>
+        <div class="info-item">
+          <span class="info-label">语言：</span>
+          <span class="info-value" id="language">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">时区：</span>
+          <span class="info-value" id="timezone">检测中...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">是否触摸设备：</span>
+          <span class="info-value" id="isTouchDevice">检测中...</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 工具函数：获取操作系统
+      function getOS() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (userAgent.includes('win')) return 'Windows';
+        if (userAgent.includes('mac')) return 'macOS';
+        if (userAgent.includes('linux')) return 'Linux';
+        if (userAgent.includes('android')) return 'Android';
+        if (userAgent.includes('iphone') || userAgent.includes('ipad')) return 'iOS';
+        return '未知操作系统';
+      }
+
+      // 工具函数：获取浏览器及版本
+      function getBrowser() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        let browser = '未知浏览器';
+        let version = '';
+
+        try {
+          if (userAgent.includes('edge')) {
+            browser = 'Edge';
+            version = userAgent.match(/edge\/([\d.]+)/)[1];
+          } else if (userAgent.includes('chrome')) {
+            browser = 'Chrome';
+            version = userAgent.match(/chrome\/([\d.]+)/)[1];
+          } else if (userAgent.includes('firefox')) {
+            browser = 'Firefox';
+            version = userAgent.match(/firefox\/([\d.]+)/)[1];
+          } else if (userAgent.includes('safari')) {
+            browser = 'Safari';
+            version = userAgent.match(/version\/([\d.]+)/)[1];
+          } else if (userAgent.includes('opera')) {
+            browser = 'Opera';
+            version = userAgent.match(/opera\/([\d.]+)/)[1];
+          } else if (userAgent.includes('msie') || userAgent.includes('trident')) {
+            browser = 'Internet Explorer';
+            version = userAgent.match(/(msie|rv:)([\d.]+)/)[2];
+          }
+        } catch (e) {
+          version = '未知';
+        }
+        return { name: browser, version: version || '未知' };
+      }
+
+      // 工具函数：获取设备类型
+      function getDeviceType() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (userAgent.includes('mobile') || userAgent.includes('android') || userAgent.includes('iphone') || userAgent.includes('ipad')) {
+          return userAgent.includes('ipad') ? '平板' : '手机';
+        }
+        return '电脑';
+      }
+
+      // 工具函数：获取网络信息
+      function getNetworkInfo() {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!connection) return { type: '不支持', downlink: '不支持', rtt: '不支持' };
+        return {
+          type: connection.effectiveType || '未知',
+          downlink: connection.downlink ? `${connection.downlink} Mbps` : '未知',
+          rtt: connection.rtt ? `${connection.rtt} ms` : '未知',
+        };
+      }
+
+      // 工具函数：获取电池信息
+      async function getBatteryInfo() {
+        try {
+          if (navigator.getBattery) {
+            const battery = await navigator.getBattery();
+            return {
+              level: `${Math.round(battery.level * 100)}%`,
+              charging: battery.charging ? '是' : '否',
+            };
+          }
+        } catch (e) {
+          console.log('电池信息获取失败：', e);
+        }
+        return { level: '不支持', charging: '不支持' };
+      }
+
+      // 新增核心函数：获取麦克风/扬声器设备
+      async function getAudioDevices() {
+        const audioInputEl = document.getElementById('audioInput');
+        const audioInputListEl = document.getElementById('audioInputList');
+        const audioOutputEl = document.getElementById('audioOutput');
+        const audioOutputListEl = document.getElementById('audioOutputList');
+
+        // 检测浏览器是否支持API
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+          audioInputEl.innerHTML = '<span class="status-error">浏览器不支持</span>';
+          audioOutputEl.innerHTML = '<span class="status-error">浏览器不支持</span>';
+          return;
+        }
+
+        try {
+          // 先请求媒体权限（必须，否则设备信息会被隐藏）
+          // 申请空的流，仅为获取权限，不实际开启设备
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          // 获取所有媒体设备
+          const devices = await navigator.mediaDevices.enumerateDevices();
+
+          // 分类筛选：音频输入（麦克风）、音频输出（扬声器/耳机）
+          const audioInputs = devices.filter((d) => d.kind === 'audioinput');
+          const audioOutputs = devices.filter((d) => d.kind === 'audiooutput');
+
+          // 渲染麦克风设备
+          if (audioInputs.length === 0) {
+            audioInputEl.innerHTML = '<span class="status-warning">未检测到麦克风</span>';
+          } else {
+            audioInputEl.innerHTML = `<span class="status-success">共${audioInputs.length}个</span>`;
+            audioInputListEl.innerHTML = audioInputs
+              .map((d, i) => `<li>${i + 1}. 名称：${d.label || '未知设备'} | ID：${d.deviceId.slice(0, 10)}***</li>`)
+              .join('');
+          }
+
+          // 渲染扬声器设备
+          if (audioOutputs.length === 0) {
+            audioOutputEl.innerHTML = '<span class="status-warning">未检测到扬声器</span>';
+          } else {
+            audioOutputEl.innerHTML = `<span class="status-success">共${audioOutputs.length}个</span>`;
+            audioOutputListEl.innerHTML = audioOutputs
+              .map((d, i) => `<li>${i + 1}. 名称：${d.label || '未知设备'} | ID：${d.deviceId.slice(0, 10)}***</li>`)
+              .join('');
+          }
+        } catch (err) {
+          // 权限被拒绝/其他错误
+          audioInputEl.innerHTML = '<span class="status-error">权限被拒绝/获取失败</span>';
+          audioOutputEl.innerHTML = '<span class="status-error">权限被拒绝/获取失败</span>';
+          console.log('音频设备获取失败：', err.message);
+        }
+      }
+
+      // 页面加载完成后执行所有检测
+      window.addEventListener('DOMContentLoaded', async () => {
+        // 1. 基础设备信息
+        const deviceType = getDeviceType();
+        const os = getOS();
+        const browser = getBrowser();
+        const userAgent = navigator.userAgent;
+        document.getElementById('deviceType').textContent = deviceType;
+        document.getElementById('os').textContent = os;
+        document.getElementById('browser').textContent = browser.name;
+        document.getElementById('browserVersion').textContent = browser.version;
+        document.getElementById('userAgent').textContent = userAgent;
+
+        // 2. 屏幕与显示信息
+        const screenResolution = `${screen.width} × ${screen.height}`;
+        const windowResolution = `${window.innerWidth} × ${window.innerHeight}`;
+        const pixelRatio = window.devicePixelRatio.toFixed(2);
+        const colorDepth = screen.colorDepth + ' 位';
+        document.getElementById('screenResolution').textContent = screenResolution;
+        document.getElementById('windowResolution').textContent = windowResolution;
+        document.getElementById('pixelRatio').textContent = pixelRatio;
+        document.getElementById('colorDepth').textContent = colorDepth;
+
+        // 3. 核心：获取麦克风/扬声器设备（新增）
+        await getAudioDevices();
+
+        // 4. 网络与连接信息
+        const network = getNetworkInfo();
+        const isOnline = navigator.onLine ? '<span class="status-success">是</span>' : '<span class="status-error">否</span>';
+        document.getElementById('networkType').textContent = network.type;
+        document.getElementById('downlink').textContent = network.downlink;
+        document.getElementById('rtt').textContent = network.rtt;
+        document.getElementById('isOnline').innerHTML = isOnline;
+
+        // 5. 电池与硬件信息
+        const battery = await getBatteryInfo();
+        const hardwareConcurrency = navigator.hardwareConcurrency || '未知';
+        const deviceMemory = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : '不支持';
+        document.getElementById('batteryLevel').textContent = battery.level;
+        document.getElementById('batteryCharging').textContent = battery.charging;
+        document.getElementById('hardwareConcurrency').textContent = hardwareConcurrency;
+        document.getElementById('deviceMemory').textContent = deviceMemory;
+
+        // 6. 其他信息
+        const language = navigator.language || '未知';
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '未知';
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 ? '是' : '否';
+        document.getElementById('language').textContent = language;
+        document.getElementById('timezone').textContent = timezone;
+        document.getElementById('isTouchDevice').textContent = isTouchDevice;
+      });
+    </script>
+  </body>
+</html>
