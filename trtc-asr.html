@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://web.sdk.qcloud.com/trtc/webrtc/test/leochliu/beisen-audio-volume/dist/npm-package/trtc.js"></script>
+    <style>
+      * {
+        margin: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #log {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+    </style>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>
+      var vConsole = new window.VConsole();
+    </script>
+  </head>
+  <body>
+    <h2>TRTC 音频采集 Demo</h2>
+    <button id="startBtn">开始音频采集</button>
+    <button id="stopBtn">停止音频采集</button>
+    <div id="log"></div>
+
+    <script>
+      let trtc = null; // TRTC 实例
+      let isCollecting = false;
+
+      const log = (msg) => {
+        const logDom = document.getElementById('log');
+        logDom.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+        logDom.scrollTop = logDom.scrollHeight;
+      };
+
+      // 1. 初始化 TRTC
+      function initTRTC() {
+        trtc = TRTC.create();
+        log('TRTC 初始化成功');
+      }
+      // 2. 创建本地音频流 + 采集音频数据
+      async function startAudioCollect() {
+        if (isCollecting) return;
+        if (!trtc) initTRTC();
+
+        try {
+          await trtc.startLocalAudio({ publish: false });
+          //监听音频流
+          trtc.on(TRTC.EVENT.AUDIO_FRAME, (event) => {
+            log(`AUDIO_FRAME: ${event.data.length}`);
+          });
+
+          isCollecting = true;
+          log('=== 音频采集已启动 ===');
+        } catch (error) {
+          log(`采集失败: ${error.message}`);
+          console.error(error);
+        }
+      }
+
+      // 3. 停止采集
+      async function stopAudioCollect() {
+        if (!isCollecting) return;
+        try {
+          await trtc.stopLocalAudio();
+          trtc?.off('*');
+          trtc?.destroy();
+          trtc = null;
+          isCollecting = false;
+          log('=== 音频采集已停止 ===');
+        } catch (error) {
+          log(`停止失败: ${error.message}`);
+        }
+      }
+
+      // 绑定按钮事件
+      document.getElementById('startBtn').onclick = startAudioCollect;
+      document.getElementById('stopBtn').onclick = stopAudioCollect;
+
+      log('Demo 加载完成');
+    </script>
+  </body>
+</html>
