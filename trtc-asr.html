@@ -67,9 +67,11 @@
 
         try {
           await trtc.startLocalAudio({ publish: false });
-          //监听音频流
+          // 指定采样率
+          await trtc.callExperimentalAPI('enableAudioFrameEvent', { enable: true, userId: '', sampleRate: 16000 });
+          // 监听音频流
           trtc.on(TRTC.EVENT.AUDIO_FRAME, (event) => {
-            log(`AUDIO_FRAME: ${event.data.reduce((pre, cur) => pre + cur, 0)}`);
+            log(`AUDIO_FRAME: ${JSON.stringify({ sum: event.data.reduce((pre, cur) => pre + cur, 0), sampleRate: event.sampleRate })}`);
           });
 
           isCollecting = true;
