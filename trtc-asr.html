@@ -21,9 +21,9 @@
         padding: 10px;
       }
     </style>
-    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-      var vConsole = new window.VConsole();
+      eruda.init();
     </script>
   </head>
   <body>
@@ -36,11 +36,24 @@
       let trtc = null; // TRTC 实例
       let isCollecting = false;
 
-      const log = (msg) => {
+      // 日志：时间戳精确到毫秒，最多保留 500 条
+      function log(msg) {
         const logDom = document.getElementById('log');
-        logDom.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+        const now = new Date();
+        // 时间戳精确到毫秒
+        const timeStr = now.toLocaleTimeString() + '.' + String(now.getMilliseconds()).padStart(3, '0');
+
+        const line = `[${timeStr}] ${msg}`;
+        logDom.innerHTML += line + '<br>';
+
+        // 控制日志数量小于 500
+        const lines = logDom.innerHTML.split('<br>').filter((l) => l.trim());
+        if (lines.length >= 500) {
+          logDom.innerHTML = lines.slice(-499).join('<br>') + '<br>';
+        }
+
         logDom.scrollTop = logDom.scrollHeight;
-      };
+      }
 
       // 1. 初始化 TRTC
       function initTRTC() {
@@ -56,7 +69,7 @@
           await trtc.startLocalAudio({ publish: false });
           //监听音频流
           trtc.on(TRTC.EVENT.AUDIO_FRAME, (event) => {
-            log(`AUDIO_FRAME: ${event.data.length}`);
+            log(`AUDIO_FRAME: ${event.data.reduce((pre, cur) => pre + cur, 0)}`);
           });
 
           isCollecting = true;
