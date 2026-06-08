@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRTC Recorder Test</title>
+    <script src="./trtc.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        padding: 20px;
+        font-family: monospace;
+      }
+      h2 {
+        margin-bottom: 16px;
+      }
+      .btn-group {
+        margin-bottom: 12px;
+      }
+      button {
+        padding: 10px 24px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-right: 10px;
+        border: 1px solid #1677ff;
+        background: #1677ff;
+        color: #fff;
+        border-radius: 4px;
+      }
+      button:disabled {
+        background: #ccc;
+        border-color: #ccc;
+        cursor: not-allowed;
+      }
+      #log {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #d9d9d9;
+        padding: 10px;
+        background: #fafafa;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .info {
+        color: #1677ff;
+      }
+      .warn {
+        color: #fa8c16;
+      }
+      .error {
+        color: #ff4d4f;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>TRTC 音频采集 Test</h2>
+    <div class="btn-group">
+      <button id="startBtn">开始</button>
+      <button id="stopBtn" disabled>结束</button>
+      <button id="grabBtn" style="background: #ff4d4f; border-color: #ff4d4f">霸麦</button>
+      <button id="releaseBtn" style="background: #ff4d4f; border-color: #ff4d4f">放麦</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+      TRTC.setLogLevel(3);
+      const SAMPLE_RATE = 16000;
+
+      function getTimestamp() {
+        const now = new Date();
+        return now.toLocaleTimeString() + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      }
+
+      function log(msg, level) {
+        const logDom = document.getElementById('log');
+        const cls = level || 'info';
+        const line = `<span class="${cls}">[${getTimestamp()}] ${msg}</span>`;
+        logDom.innerHTML += line + '\n';
+        logDom.scrollTop = logDom.scrollHeight;
+      }
+
+      function float32ToInt16(float32Data) {
+        const length = float32Data.length;
+        const int16Data = new Int16Array(length);
+        for (let i = 0; i < length; i++) {
+          let sample = Math.max(-1, Math.min(1, float32Data[i]));
+          sample = sample < 0 ? sample * 32768 : sample * 32767;
+          int16Data[i] = sample;
+        }
+        return int16Data;
+      }
+
+      // ==================== 实例1：常规采集 ====================
+      let trtc = null;
+      let isCollecting = false;
+      let frameCount = 0;
+      let pcmChunkList = [];
+
+      function initTRTC() {
+        trtc = TRTC.create();
+        log('[实例1] TRTC 实例创建成功');
+
+        trtc.on(TRTC.EVENT.ERROR, (error) => {
+          log(`[实例1] TRTC ERROR: code=${error.code} name=${error.name} extraCode=${error.extraCode} message=${error.message}`, 'error');
+          if (error.code === TRTC.ERROR_CODE.DEVICE_ERROR) {
+            log('[实例1] >>> 麦克风设备错误 (DEVICE_ERROR)', 'error');
+          }
+        });
+      }
+
+      async function start() {
+        if (isCollecting) return;
+        if (!trtc) initTRTC();
+
+        try {
+          await trtc.callExperimentalAPI('enableAudioFrameEvent', {
+            enable: true,
+            userId: '',
+            sampleRate: SAMPLE_RATE,
+            channelCount: 1,
+          });
+          log('[实例1] enableAudioFrameEvent 配置成功');
+
+          trtc.on(TRTC.EVENT.AUDIO_FRAME, (event) => {
+            frameCount++;
+            const volumeSum = event.data.reduce((pre, cur) => pre + Math.abs(cur), 0);
+            const avgVolume = (volumeSum / event.data.length).toFixed(6);
+            log(`[实例1] AUDIO_FRAME #${frameCount} | samples=${event.data.length} | avgVol=${avgVolume} | sr=${event.sampleRate} | ch=${event.channelCount}`);
+            pcmChunkList.push(float32ToInt16(event.data));
+          });
+
+          await trtc.startLocalAudio({ publish: false });
+          isCollecting = true;
+          frameCount = 0;
+          pcmChunkList = [];
+          document.getElementById('startBtn').disabled = true;
+          document.getElementById('stopBtn').disabled = false;
+          log('[实例1] === 音频采集已启动 ===', 'info');
+        } catch (error) {
+          log(`[实例1] 采集启动失败: ${error.message || error}`, 'error');
+          console.error(error);
+        }
+      }
+
+      async function stop() {
+        if (!isCollecting) return;
+        destroyInstance1();
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        log(`[实例1] === 音频采集已停止 | 总帧数=${frameCount} | 累计数据=${pcmChunkList.length} 块 ===`, 'warn');
+      }
+
+      function destroyInstance1() {
+        if (trtc) {
+          try {
+            trtc.stopLocalAudio();
+          } catch (e) {}
+          try {
+            trtc.off('*');
+          } catch (e) {}
+          try {
+            trtc.destroy();
+          } catch (e) {}
+          trtc = null;
+        }
+        isCollecting = false;
+        frameCount = 0;
+        pcmChunkList = [];
+      }
+
+      // ==================== 实例2：霸麦（独立实例，不共用） ====================
+      let grabTrtc = null;
+      let isGrabbing = false;
+      let grabFrameCount = 0;
+      let grabPcmChunkList = [];
+
+      async function grabMike() {
+        if (isGrabbing) {
+          log('[霸麦-实例2] 已在霸麦中，先放麦再重新霸麦', 'warn');
+          releaseMike();
+        }
+
+        log('[霸麦-实例2] === 开始霸麦，创建独立 TRTC 实例 ===', 'warn');
+
+        grabTrtc = TRTC.create();
+        log('[霸麦-实例2] 独立 TRTC 实例已创建 (与实例1互不干扰)');
+
+        try {
+          await grabTrtc.startLocalAudio({ publish: false });
+          isGrabbing = true;
+          log('[霸麦-实例2] === 霸麦成功，实例2 已启动采集 ===', 'warn');
+          log(`[状态] 实例1 active=${isCollecting} | 实例2(霸麦) active=${isGrabbing}`, 'info');
+        } catch (error) {
+          log(`[霸麦-实例2] 抢占失败: ${error.message || error}`, 'error');
+          console.error(error);
+        }
+      }
+
+      async function releaseMike() {
+        if (!isGrabbing) {
+          log('[霸麦-实例2] 当前未在霸麦状态', 'warn');
+          return;
+        }
+        log('[霸麦-实例2] === 放麦 ===', 'warn');
+        destroyInstance2();
+        log('[霸麦-实例2] === 实例2 已释放，麦克风归还 ===', 'warn');
+        log(`[状态] 实例1 active=${isCollecting} | 实例2(霸麦) active=${isGrabbing}`, 'info');
+      }
+
+      function destroyInstance2() {
+        if (grabTrtc) {
+          try {
+            grabTrtc.stopLocalAudio();
+          } catch (e) {}
+          try {
+            grabTrtc.off('*');
+          } catch (e) {}
+          try {
+            grabTrtc.destroy();
+          } catch (e) {}
+          grabTrtc = null;
+        }
+        isGrabbing = false;
+        grabFrameCount = 0;
+        grabPcmChunkList = [];
+      }
+
+      document.getElementById('startBtn').onclick = start;
+      document.getElementById('stopBtn').onclick = stop;
+      document.getElementById('grabBtn').onclick = grabMike;
+      document.getElementById('releaseBtn').onclick = releaseMike;
+
+      log('Test 页面加载完成', 'info');
+      log('  → "开始/结束": 管理 TRTC 实例1', 'info');
+      log('  → "霸麦/放麦": 管理 TRTC 实例2（完全独立，不共用采集）', 'info');
+      log('  → 两个实例可同时运行，日志用 [实例1] / [霸麦-实例2] 区分', 'info');
+    </script>
+  </body>
+</html>
