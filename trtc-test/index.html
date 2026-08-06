@@ -1,29 +1,66 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="https://yl0412.github.io/trtc-test/trtc.js"></script>
-    <script src="https://yl0412.github.io/trtc-test/audio-player.umd.js"></script>
-    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-    <script>
-      // VConsole will be exported to `window.VConsole` by default.
-      var vConsole = new window.VConsole();
-    </script>
-  </head>
-  <body>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=1" controls></audio>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=2" controls></audio>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=3" controls></audio>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=4" controls></audio>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=5" controls></audio>
-    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=6" controls></audio>
-    <script>
-      TRTC.setLogLevel(3);
-      const trtc = TRTC.create();
-      console.error(`\x1B[1m\x1B[32m[🐑🐑🐑] this.trtc-->`, trtc._room._version);
-      trtc.destroy();
-    </script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <script src="https://yl0412.github.io/trtc-test/trtc.js"></script>
+  <script src="https://yl0412.github.io/trtc-test/audio-player.umd.js"></script>
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+  <script>
+    // VConsole will be exported to `window.VConsole` by default.
+    var vConsole = new window.VConsole();
+  </script>
+</head>
+
+<body>
+  <h1>TRTC Test</h1>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=1" controls></audio>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=2" controls></audio>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=3" controls></audio>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=4" controls></audio>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=5" controls></audio>
+  <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=6" controls></audio>
+
+  <button id="btn">Click me</button>
+
+  <script>
+    document.getElementById('btn').onclick = () => {
+      const audioEl = new Audio();
+      audioEl.crossOrigin = 'anonymous';
+      audioEl.src = 'https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=6';
+      audioEl.playbackRate = 1;
+      audioEl.load();
+
+      // 音频资源加载完成
+      audioEl.addEventListener('loadedmetadata', () => { });
+      // 音频播放完成
+      audioEl.addEventListener('ended', () => { });
+      // 音频加载失败
+      audioEl.addEventListener('error', (error) => { });
+      audioEl?.play().then(() => { });
+    };
+  </script>
+  <script>
+    TRTC.setLogLevel(3);
+    const trtc = TRTC.create({ plugins: [AudioPlayer] });
+    const player = await trtc.startPlugin('AudioPlayer', {
+      id: 'ai-voice',
+      sourceType: 'pcm',
+      realtime: true, // 默认值，可省略
+      publish: true,  // 混入发布流推送给远端用户
+      onTimeUpdate: (currentTime, duration) => {
+        console.log(`播放时间: ${currentTime.toFixed(2)}s`);
+      },
+      onDurationChange: (duration) => {
+        console.log(`缓冲区时长: ${duration.toFixed(2)}s`);
+      },
+      onEnded: () => {
+        console.log('缓冲区播放完毕');
+      },
+    });
+  </script>
+</body>
+
 </html>
