@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://yl0412.github.io/trtc-test/trtc.js"></script>
+    <script src="https://yl0412.github.io/trtc-test/audio-player.umd.js"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>
+      // VConsole will be exported to `window.VConsole` by default.
+      var vConsole = new window.VConsole();
+    </script>
+  </head>
+  <body>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=1" controls></audio>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=2" controls></audio>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=3" controls></audio>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=4" controls></audio>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=5" controls></audio>
+    <audio src="https://yl0412.github.io/trtc-test/75bd2e63cea347d6aa5427fbd6104a5f.mp3?t=6" controls></audio>
+    <script>
+      TRTC.setLogLevel(3);
+      const trtc = TRTC.create();
+      console.error(`\x1B[1m\x1B[32m[🐑🐑🐑] this.trtc-->`, trtc._room._version);
+      trtc.destroy();
+    </script>
+  </body>
+</html>
