@@ -29,12 +29,14 @@
     </div>
     <button id="mediaButton">获取媒体权限</button>
     <div id="status"></div>
+    <div id="ua" style="word-break: break-all; margin-top: 12px; color: #555;"></div>
 
     <script>
       const audioCheckbox = document.getElementById('audioCheckbox');
       const videoCheckbox = document.getElementById('videoCheckbox');
       const mediaButton = document.getElementById('mediaButton');
       const statusDiv = document.getElementById('status');
+      document.getElementById('ua').textContent = `当前 UA：${navigator.userAgent}`;
 
       mediaButton.addEventListener('click', async () => {
         const audioEnabled = audioCheckbox.checked;
